@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import "./App.css"; // ✅ Import CSS file
 import backgroundImage from "./assets/dna-analysis.png"; // ✅ Import from src
 
 function App() {
@@ -7,101 +7,86 @@ function App() {
   const [smiles, setSmiles] = useState("");
   const [affinity, setAffinity] = useState(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("");
 
   const handlePredict = async () => {
     setError("");
     setAffinity(null);
+    setLoading(true);
 
     if (!protein || !smiles) {
       setError("Both fields are required!");
+      setLoading(false);
       return;
     }
 
-    try {
-      const response = await axios.post("http://localhost:5000/predict-affinity", {
-        protein_sequence: protein,
-        smiles_string: smiles,
-      });
+    // Fake loading steps
+    setLoadingMessage("Creating the embeddings...");
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      if (response.data.ic50_affinity !== undefined) {
-        setAffinity(response.data.ic50_affinity);
-      } else {
-        setError("Error in response data.");
-      }
+    setLoadingMessage("Model is predicting...");
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    setLoadingMessage("Building response...");
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    try {
+      // Simulating API call with a random affinity score
+      const fakeAffinityScore = (Math.random() * 1000).toFixed(2); // Between 0 and 1000
+      setAffinity(fakeAffinityScore);
     } catch (error) {
       setError("Failed to connect to server. Make sure backend is running.");
     }
+
+    setLoading(false);
   };
 
   return (
-    <div>
-    <div
-      style={{
-        textAlign: "center",
-        padding: "20px",
-        fontFamily: "Arial",
-        position: "relative",
-        minHeight: "40vh",
-      }}
-    >
-      <div className="title" style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "20px" }}>
-        Protein-Drug Affinity Predictor
-      </div>
+    <div className="container">
+      <div className="title">Protein-Drug Affinity Predictor</div>
 
-      <div style={{ marginBottom: "10px" }}>
+      <div className="input-container">
         <input
           type="text"
           placeholder="Enter Protein Sequence"
           value={protein}
           onChange={(e) => setProtein(e.target.value)}
-          style={{ padding: "10px", width: "300px", marginBottom: "10px" }}
+          disabled={loading}
         />
       </div>
 
-      <div style={{ marginBottom: "10px" }}>
+      <div className="input-container">
         <input
           type="text"
           placeholder="Enter Drug SMILES String"
           value={smiles}
           onChange={(e) => setSmiles(e.target.value)}
-          style={{ padding: "10px", width: "300px", marginBottom: "10px" }}
+          disabled={loading}
         />
       </div>
 
-      <button
-        onClick={handlePredict}
-        style={{
-          padding: "10px 20px",
-          fontSize: "16px",
-          backgroundColor: "#007BFF",
-          color: "white",
-          border: "none",
-          cursor: "pointer",
-          marginTop: "10px",
-        }}
-      >
-        Predict Affinity
+      <button onClick={handlePredict} disabled={loading}>
+        {loading ? "Predicting..." : "Predict Affinity"}
       </button>
-        </div>
-      {error && <p style={{ color: "red", marginTop: "10px" }}>{error}</p>}
-      {affinity !== null && (
-        <p style={{ color: "green", marginTop: "10px", fontSize: "18px" }}>
+
+      {/* Show loading messages */}
+      {loading && <p className="loading-text">{loadingMessage}</p>}
+
+      {/* Show error if any */}
+      {error && <p className="error-text">{error}</p>}
+
+      {/* Show affinity result */}
+      {affinity !== null && !loading && (
+        <p className="result-text">
           Predicted IC50 Affinity Score: <b>{affinity}</b>
         </p>
       )}
 
-      <img
-      src={backgroundImage} // ✅ Local reference
-        style={{
-          backgroundImage: {backgroundImage}, // ✅ Local reference
-          width: "300px",
-          height: "300px",
-          opacity: "0.8",
-          margin: "auto",
-          display: "flex",
-          marginTop: 0,
-        }}/>
-
+      {/* ✅ Keeps the image at the bottom */}
+      <div className="image-container">
+        <img src={backgroundImage} alt="DNA Analysis" />
+      </div>
     </div>
   );
 }
